@@ -2,7 +2,7 @@
 
 Simulador web del despegue de un cohete experimental (NASA, 1962) con el **método de Euler**, comparado con la **solución analítica**. Incluye Heun y Runge-Kutta de orden 4 como ampliación. Proyecto de Métodos Numéricos inspirado en la película *Talentos ocultos* (*Hidden Figures*).
 
-**Aplicación en línea:** _(pega aquí el enlace de GitHub Pages)_
+**Aplicación en línea:** _(https://joshuaquiquijana.github.io/euler-en-el-espacio/)_
 
 ## Qué hace
 
