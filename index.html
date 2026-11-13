@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Euler en el Espacio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="kicker">Métodos Numéricos · Misión Friendship 7 · 1962</p>
+    <h1>Euler en el Espacio</h1>
+    <p class="lede">Simulador del despegue de un cohete experimental. Aproxima velocidad y altura con el método de Euler, calcula la solución analítica y compara los errores. Inspirado en <em>Talentos ocultos</em> (<em>Hidden Figures</em>).</p>
+  </header>
+
+  <div class="layout">
+    <aside class="panel" aria-label="Parámetros del modelo">
+      <h2>Parámetros</h2>
+      <p class="hint">Valores ficticios del enunciado. Cámbialos y todo se recalcula.</p>
+      <div class="field"><label for="m">Masa <small>m (kg)</small></label><input id="m" type="number" step="any" value="1000"></div>
+      <div class="field"><label for="T">Empuje <small>T (N)</small></label><input id="T" type="number" step="any" value="15000"></div>
+      <div class="field"><label for="g">Gravedad <small>g (m/s²)</small></label><input id="g" type="number" step="any" value="9.81"></div>
+      <div class="field"><label for="k">Resistencia lineal <small>k (kg/s)</small></label><input id="k" type="number" step="any" value="100"></div>
+      <div class="field"><label for="v0">Velocidad inicial <small>v(0) (m/s)</small></label><input id="v0" type="number" step="any" value="0"></div>
+      <div class="field"><label for="y0">Altura inicial <small>y(0) (m)</small></label><input id="y0" type="number" step="any" value="0"></div>
+      <div class="field"><label for="tmax">Tiempo total <small>t (s)</small></label><input id="tmax" type="number" step="any" min="0.1" value="20"></div>
+      <div class="field"><label for="h">Paso de Euler <small>h (s)</small></label><input id="h" type="number" step="any" min="0.001" value="2"></div>
+      <div class="checks">
+        <span class="hint" style="margin:0">Mostrar también en las gráficas</span>
+        <label><input type="checkbox" id="showHeun"><span class="swatch" style="background:var(--heun)"></span>Heun (orden 2)</label>
+        <label><input type="checkbox" id="showRK4"><span class="swatch" style="background:var(--rk4)"></span>Runge-Kutta 4 (orden 4)</label>
+      </div>
+      <button type="button" id="reset">Restablecer valores del enunciado</button>
+      <p class="note" id="stepNote"></p>
+    </aside>
+
+    <main>
+      <section id="modelo">
+        <h2>1. Modelo matemático</h2>
+        <p class="sub">Segunda ley de Newton con tres fuerzas: empuje hacia arriba, peso y resistencia proporcional a la velocidad.</p>
+        <div class="eqs">
+          <div>
+            <h3>Ecuaciones</h3>
+            <div class="formula">m · dv/dt = T − m·g − k·v
+dy/dt    = v</div>
+            <div class="formula" id="fSub"></div>
+          </div>
+          <div>
+            <h3>Solución analítica</h3>
+            <div class="formula" id="fExact"></div>
+            <p class="note" id="fNote"></p>
+          </div>
+        </div>
+        <h3>Método de Euler</h3>
+        <div class="formula" id="fEuler"></div>
+        <p class="note">Modelo didáctico: masa, empuje, gravedad y resistencia constantes. Un cohete real quema combustible (la masa cambia), el empuje varía con la altitud y la resistencia del aire no es lineal.</p>
+      </section>
+
+      <section id="simulacion">
+        <h2>2. Simulación del despegue</h2>
+        <p class="sub">El cohete sube con la solución exacta; la marca naranja discontinua es la altura que calcula Euler con el paso elegido.</p>
+        <div class="controls">
+          <button type="button" class="primary" id="play">▶ Lanzar</button>
+          <input type="range" id="scrub" min="0" max="20" step="0.01" value="0" aria-label="Tiempo de simulación">
+          <span class="readout" id="tRead"></span>
+        </div>
+        <div class="sim">
+          <div class="track" id="track" aria-hidden="true"></div>
+          <div>
+            <div class="tiles" id="liveTiles"></div>
+            <h3>Resultado al final del intervalo</h3>
+            <div class="tiles" id="kpi"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="graficas">
+        <h2>3. Gráficas comparativas</h2>
+        <p class="sub">Euler sobreestima la velocidad porque usa la aceleración del inicio de cada intervalo; por eso mismo subestima la altura.</p>
+        <div class="charts">
+          <figure><div id="chV"></div><ul class="legend" id="lgV"></ul><figcaption>Velocidad v(t)</figcaption></figure>
+          <figure><div id="chY"></div><ul class="legend" id="lgY"></ul><figcaption>Altura y(t)</figcaption></figure>
+          <figure><div id="chE"></div><ul class="legend" id="lgE"></ul><figcaption>Error de la altura al final según el paso h, en escala logarítmica. La pendiente de cada recta es el orden del método.</figcaption></figure>
+          <figure><div id="chD"></div><ul class="legend" id="lgD"></ul><figcaption>Diferencia con la solución exacta a lo largo del tiempo (Euler y métodos activados).</figcaption></figure>
+        </div>
+      </section>
+
+      <section id="iteraciones">
+        <h2>4. Tabla de iteraciones</h2>
+        <p class="sub">Cada fila usa los valores de la anterior. Con los datos del enunciado, la primera altura de Euler es 0 m porque usa la velocidad inicial en todo el intervalo.</p>
+        <div class="row"><label for="tblMethod">Método <select id="tblMethod"><option value="euler">Euler</option><option value="heun">Heun</option><option value="rk4">RK4</option></select></label></div>
+        <div class="tw"><table id="iterTable"></table></div>
+      </section>
+
+      <section id="errores">
+        <h2>5. Comparación de errores</h2>
+        <h3>Efecto de reducir el paso (Euler)</h3>
+        <div class="tw"><table id="stepTable"></table></div>
+        <p class="note" id="stepConclusion"></p>
+        <h3>Euler, Heun y RK4 con el mismo paso</h3>
+        <div class="tw"><table id="methodTable"></table></div>
+        <p class="note" id="methodConclusion"></p>
+      </section>
+
+      <section id="desafio">
+        <h2>6. Desafío: tú decides la precisión</h2>
+        <p class="sub">Eres responsable de comprobar los cálculos antes del despegue. Elige el paso de Euler y revisa si cumple los límites de error.</p>
+        <div class="chips" role="radiogroup" aria-label="Paso de integración" id="chal"></div>
+        <div class="row" style="margin-top:12px">
+          <label for="tolV">Error máx. de velocidad (m/s) <input id="tolV" type="number" step="any" value="0.5"></label>
+          <label for="tolY">Error máx. de altura (m) <input id="tolY" type="number" step="any" value="5"></label>
+        </div>
+        <div class="tiles" id="chalTiles"></div>
+        <div class="verdict" id="chalVerdict" aria-live="polite"></div>
+      </section>
+
+      <section id="reflexion">
+        <h2>7. Interpretación física y conclusiones</h2>
+        <p class="sub" id="concl"></p>
+        <h3>Preguntas de reflexión (película <em>Talentos ocultos</em>)</h3>
+        <details open><summary>1. ¿Por qué era importante verificar los cálculos antes de enviar astronautas al espacio?</summary>
+          <p>Un error numérico en la trayectoria es una decisión sobre vidas humanas: define dónde reingresa la cápsula y si el descenso es seguro. En la película, John Glenn pide que Katherine Johnson verifique a mano los resultados de la computadora electrónica antes de volar. Aquí pasa lo mismo en pequeño: sin comparar con la solución exacta no sabríamos cuánto se equivoca Euler.</p></details>
+        <details><summary>2. ¿Qué riesgos existirían al utilizar un tamaño de paso demasiado grande?</summary>
+          <p>El error de Euler crece en proporción al paso (orden 1). Con pasos grandes se subestima o sobreestima la trayectoria, se pierden cambios rápidos y puede aparecer inestabilidad: en este modelo ocurre si h &gt; 2m/k, es decir, h &gt; 20 s con los datos del enunciado. En una misión real, eso significaría un punto de reingreso o una velocidad mal calculados.</p></details>
+        <details><summary>3. ¿Por qué una aproximación puede parecer razonable y aun así acumular errores importantes?</summary>
+          <p>Cada paso arrastra el error del anterior, y la altura integra el error de la velocidad. Un 3 % de diferencia en velocidad parece pequeño, pero produce metros de error en la altura y puede superar la tolerancia exigida (en el desafío, 0,5 m/s y 5 m). Un número plausible no es un número verificado.</p></details>
+        <details><summary>4. ¿Qué variables reales del lanzamiento no fueron consideradas en nuestro modelo?</summary>
+          <ul><li>La pérdida de masa por consumo de combustible.</li><li>El empuje que varía con la altitud y el tiempo de quema.</li><li>La gravedad, que disminuye con la altura.</li><li>La resistencia aerodinámica no lineal (depende de la densidad del aire y de v²).</li><li>El viento, la rotación de la Tierra y la trayectoria curva.</li><li>La estabilidad y el control de la nave.</li></ul></details>
+        <details><summary>5. ¿Por qué el cálculo de una trayectoria lunar requiere un modelo mucho más complejo que el ascenso vertical de este ejercicio?</summary>
+          <p>Porque actúan varios cuerpos a la vez (Tierra, Luna y Sol), el movimiento es tridimensional y los parámetros cambian durante días. Hay que resolver sistemas acoplados con ventanas de lanzamiento exactas, correcciones a mitad de camino y reingreso preciso, donde un error de pocos m/s se convierte en miles de kilómetros. Por eso se usan métodos de mayor orden (como RK4), pasos adaptativos y verificación independiente.</p></details>
+        <footer>Datos del cohete ficticios, elegidos para poder resolver el ejercicio a mano. Código abierto en el repositorio del proyecto.</footer>
+      </section>
+    </main>
+  </div>
+</div>
+<script src="solver.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
